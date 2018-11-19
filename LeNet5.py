@@ -1,7 +1,5 @@
 import tensorflow as tf
-import random
-import matplotlib.pyplot as plt
-from tensorflow.contrib.layers import flatten   # tf 1.9以后  tf.reshape没有了
+from tensorflow.contrib.layers import flatten
 from tensorflow.examples.tutorials.mnist import input_data
 
 num_epochs = 1
@@ -10,7 +8,7 @@ lr = 0.001
 mean = 0.0
 stddev = 0.1
 
-mnist = input_data.read_data_sets("./MNIST_data/", one_hot=True)
+mnist = input_data.read_data_sets("./MNIST_data", one_hot=True)
 
 print("Image size: {}".format(mnist.train.images[0].shape))
 print("Training set: {}".format(mnist.train.images.shape))
@@ -21,16 +19,14 @@ X = tf.placeholder(tf.float32, shape=[None, 784])
 X_img = tf.reshape(X, shape=[-1, 28, 28, 1])
 Y = tf.placeholder(tf.float32, shape=[None, 10])
 
-# 显示图片
-index = random.randint(0, mnist.train.num_examples)
-plt.imshow(mnist.train.images[index].reshape(28, 28), cmap="Greys")
-#print("Label: {}".format((mnist.train.labels[index]))
-plt.show()
+X_img = tf.pad(X_img, [[0, 0], [2, 2], [2, 2], [0, 0]])
+print(X_img.shape)
+
 
 # 第一层卷积： 28*28*1 --> 28*28*6
 conv1_W = tf.Variable(tf.truncated_normal(shape=[5, 5, 1, 6], mean=mean, stddev=stddev))
 conv1_b = tf.Variable(tf.zeros([6]))
-conv1 = tf.nn.conv2d(X_img, conv1_W, strides=[1, 1, 1, 1], padding="SAME")
+conv1 = tf.nn.conv2d(X_img, conv1_W, strides=[1, 1, 1, 1], padding="VALID")
 conv1 = tf.nn.bias_add(conv1, conv1_b)
 conv1 = tf.nn.relu(conv1)
 print(conv1.shape)
@@ -94,11 +90,11 @@ with tf.Session() as sess:
         print("Epoch: {}\tLoss: {:.9f}\tAccuracy: {:.3%}".format(epoch+1, avg_cost, avg_accuracy))
     print("Training finished!")
 
-    saver.save(sess, "ckpt_examples/LeNet5/lenet.ckpt")
+    saver.save(sess, "ckpt_examples/LeNet/lenet.ckpt")
     print("Model saved!")
 
 with tf.Session() as sess:
-    model_file = tf.train.latest_checkpoint("ckpt_examples/LeNet5")
+    model_file = tf.train.latest_checkpoint("ckpt_examples/LeNet")
     saver.restore(sess, model_file)
     accuracy = sess.run(accuracy, feed_dict={X: mnist.test.images, Y: mnist.test.labels})
     print("Accuracy on test set: {:.3%}".format(accuracy))
